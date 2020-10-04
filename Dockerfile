@@ -7,14 +7,16 @@ RUN apt install -y ca-certificates
 RUN mv /etc/apt/sources.list /etc/apt/sources.list.bkp
 COPY ./sources.list /etc/apt/sources.list
 RUN apt update && apt upgrade
-RUN apt install -y python3 python3-pip
 
-# update pip
+# install python3 & pip, using THU source
+RUN apt install -y python3 python3-pip
+RUN python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pip -U
+RUN python3 -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
+
+# install python requirements
 WORKDIR /dbms
 COPY ./requirements.txt .
-RUN pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple pip -U
-RUN pip3 config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
-RUN pip3 install -r ./requirements.txt -U
+RUN python3 -m pip install -r ./requirements.txt -U
 
 # copy files
 COPY ./3-sized-db-generation .
