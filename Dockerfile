@@ -1,7 +1,7 @@
 # base image
 FROM ubuntu:20.04
 ARG DEBIAN_FRONTEND=noninteractive
-ENV TZ=Asia/Beijing
+ENV TZ=Asia/Shanghai
 
 # change to THU source
 RUN apt update && apt install -y ca-certificates
@@ -31,4 +31,4 @@ COPY ./3-sized-db-generation .
 COPY ./entry.sh .
 
 # start
-CMD ["bash", "./entry.sh"]
+ENTRYPOINT ["./entry.sh"]
