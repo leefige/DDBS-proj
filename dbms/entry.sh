@@ -1,5 +1,5 @@
 #!/bin/bash
-GEN_FILE="genTable_mongoDB10G.py"
+GEN_FILE="genTable_mongoDB_test.py"
 
 # start MongoDB service
 echo "Starting MongoDB..."
@@ -13,7 +13,7 @@ echo "Generating data using '$GEN_FILE'..."
 python3 $GEN_FILE
 echo "Finished."
 
-# import BSON files to MongoDB
+# import JSON files to MongoDB
 mongoimport --db ddbs --collection user --file ./user.dat
 mongoimport --db ddbs --collection article --file ./article.dat
 mongoimport --db ddbs --collection read --file ./read.dat

@@ -7,7 +7,7 @@ ENV TZ=Asia/Shanghai
 RUN apt update && apt install -y ca-certificates
 RUN mv /etc/apt/sources.list /etc/apt/sources.list.bkp
 COPY ./sources.list /etc/apt/sources.list
-RUN apt update && apt upgrade
+RUN apt update && apt upgrade -y
 
 # install python3 & pip, using THU source
 RUN apt install -y python3 python3-pip
