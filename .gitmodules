@@ -1,0 +1,3 @@
+[submodule "docker-hadoop"]
+	path = docker-hadoop
+	url = git@github.com:leefige/docker-hadoop.git
