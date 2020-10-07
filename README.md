@@ -8,7 +8,7 @@
 - [x] MongoDB in Docker
 - [ ] Memcached (or sth. equivalent) in Docker
 - [x] Import generated JSON files to MongoDB
-- [ ] Store unstructured data (images, videos) in HDFS
+- [x] Store unstructured data (images, videos) in HDFS
 - [ ] Implement the DDBMS middleware
 - [ ] Do we need to implement a frontend (query, check articles/images, etc.)?
 - [ ] ...
@@ -16,6 +16,7 @@
 ## MongoDB
 
 Located in `dbms`. This image will start MongoDB service, generate data, and import the documents into MongoDB as collections of `db` named `ddbs`.
+Then it moves all the unstructured data (files inside `articles`) to HDFS.
 
 ### Build Image
 
@@ -30,8 +31,10 @@ It may be somehow slow when `apt update` from default sources. Later the sources
 Interactively:
 
 ```sh
-$ docker run -it dbms
+$ docker run -it --network hadoop-cluster dbms
 ```
+
+`--network hadoop-cluster` connects this container to the same network as the Hadoop cluster.
 
 ### Check Container ID
 
@@ -64,33 +67,43 @@ $ docker rm -f <ID>
 
 ## Hadoop HDFS
 
-Based on [big-data-europe/docker-hadoop](https://github.com/big-data-europe/docker-hadoop).
+Based on [big-data-europe/docker-hadoop](https://github.com/big-data-europe/docker-hadoop). Re-built on
+Ubuntu 20.04 for better package management.
+
+### Build
+
+```sh
+$ cd ./docker-hadoop
+$ make build
+```
+
+For the first time, it takes a bit long to pull Docker images.
 
 ### Start
 
 ```sh
 $ cd ./docker-hadoop
-$ docker-compose up -d
+$ make run
 ```
-
-For the first time, it takes a bit long to pull Docker images.
 
 ### Hadoop Web Interface
 
 Visit `http://localhost:9870`.
 
+Use `Utilities -> Browsw the file system` to check files in HDFS.
+
 ### Stop
 
-If you want to remove mounted volumes:
+If you want to remove mounted volumes (suggested):
 
 ```sh
 $ cd ./docker-hadoop
-$ docker-compose down --volumes
+$ make stop
 ```
 
-Else:
+Else (not suggested):
 
 ```sh
 $ cd ./docker-hadoop
-$ docker-compose down
+$ make stop-keep-volumes
 ```

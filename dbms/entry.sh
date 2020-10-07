@@ -19,5 +19,9 @@ mongoimport --db ddbs --collection user --file ./user.dat
 mongoimport --db ddbs --collection article --file ./article.dat
 mongoimport --db ddbs --collection read --file ./read.dat
 
+# move unstructured data to HDFS
+hdfs dfs -mkdir -p articles
+hdfs dfs -moveFromLocal ./articles/* articles
+
 # open Mongo Shell
 mongo
