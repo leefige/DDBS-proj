@@ -1,13 +1,5 @@
 # base image
-FROM ubuntu:20.04
-ARG DEBIAN_FRONTEND=noninteractive
-ENV TZ=Asia/Shanghai
-
-# change to THU source
-RUN apt update && apt install -y ca-certificates
-RUN mv /etc/apt/sources.list /etc/apt/sources.list.bkp
-COPY ./sources.list /etc/apt/sources.list
-RUN apt update && apt upgrade -y
+FROM leefige/hadoop-base:ubuntu20.04
 
 # install python3 & pip, using THU source
 RUN apt install -y python3 python3-pip
@@ -27,6 +19,7 @@ COPY ./requirements.txt .
 RUN python3 -m pip install -r ./requirements.txt -U
 
 # copy files
+COPY ./hadoop/* /etc/hadoop/
 COPY ./3-sized-db-generation .
 COPY ./entry.sh .
 
