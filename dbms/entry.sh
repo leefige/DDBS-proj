@@ -1,4 +1,5 @@
 #!/bin/bash
+
 GEN_FILE="genTable_mongoDB_test.py"
 
 # start MongoDB service
