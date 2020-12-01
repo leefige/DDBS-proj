@@ -2,7 +2,8 @@
 FROM leefige/hadoop-base:ubuntu20.04
 
 # install python3 & pip, using THU source
-RUN apt install -y python3 python3-pip
+RUN apt update
+RUN apt install -y python3 python3-pip --fix-missing
 RUN python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pip -U
 RUN python3 -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
@@ -23,5 +24,8 @@ COPY ./hadoop/* /etc/hadoop/
 COPY ./3-sized-db-generation .
 COPY ./entry.sh .
 
+RUN apt install -y iputils-ping
+COPY ./hdfs.py .
+
 # start
-ENTRYPOINT ["./entry.sh"]
+ENTRYPOINT ["bash"]

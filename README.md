@@ -73,7 +73,7 @@ Ubuntu 20.04 for better package management.
 ### Build
 
 ```sh
-$ cd ./docker-hadoop
+$ cd ./hadoop-docker
 $ make build
 ```
 
@@ -82,7 +82,7 @@ For the first time, it takes a bit long to pull Docker images.
 ### Start
 
 ```sh
-$ cd ./docker-hadoop
+$ cd ./hadoop-docker
 $ make run
 ```
 
@@ -97,13 +97,13 @@ Use `Utilities -> Browsw the file system` to check files in HDFS.
 If you want to remove mounted volumes (suggested):
 
 ```sh
-$ cd ./docker-hadoop
+$ cd ./hadoop-docker
 $ make stop
 ```
 
 Else (not suggested):
 
 ```sh
-$ cd ./docker-hadoop
+$ cd ./hadoop-docker
 $ make stop-keep-volumes
 ```
