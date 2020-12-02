@@ -19,6 +19,6 @@
 <configuration>
     <property>
         <name>fs.defaultFS</name>
-        <value>hdfs://namenode.hadoop-cluster:9000</value>
+        <value>hdfs://namenode.ddbs-clusters:9000</value>
     </property>
 </configuration>

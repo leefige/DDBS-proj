@@ -17,6 +17,6 @@
 <!-- Site specific YARN configuration properties -->
     <property>
         <name>yarn.resourcemanager.hostname</name>
-        <value>resourcemanager.hadoop-cluster</value>
+        <value>resourcemanager.ddbs-clusters</value>
     </property>
 </configuration>

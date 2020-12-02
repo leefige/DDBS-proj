@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  # proxy0:
+  #   image: proxy
+  #   container_name: proxy-0
+  #   restart: always
+  #   volumes:
+  #     - proxy_0:/proxy
+
+  # proxy1:
+  #   image: proxy
+  #   container_name: proxy-1
+  #   restart: always
+  #   volumes:
+  #     - proxy_1:/proxy
+
+  proxy10g:
+    image: proxy
+    container_name: proxy-10g
+    restart: always
+    volumes:
+      - data-10g:/data
+
+  proxy50g:
+    image: proxy
+    container_name: proxy-50g
+    restart: always
+    volumes:
+      - data-50g:/data
+
+  proxy100g:
+    image: proxy
+    container_name: proxy-100g
+    restart: always
+    volumes:
+      - data-100g:/data
+
+volumes:
+  # proxy_0:
+  # proxy_1:
+  data-10g:
+  data-50g:
+  data-100g:
+
+networks:
+  default:
+    name: ddbs-clusters

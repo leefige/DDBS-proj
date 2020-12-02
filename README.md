@@ -31,7 +31,7 @@ It may be somehow slow when `apt update` from default sources. Later the sources
 Interactively:
 
 ```sh
-$ docker run -it --network hadoop-cluster dbms
+$ docker run -it --rm --network hadoop-cluster dbms
 ```
 
 `--network hadoop-cluster` connects this container to the same network as the Hadoop cluster.
