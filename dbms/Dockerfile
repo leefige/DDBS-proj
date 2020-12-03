@@ -1,5 +1,13 @@
 # base image
-FROM leefige/hadoop-base:ubuntu20.04
+FROM ubuntu:20.04
+ARG DEBIAN_FRONTEND=noninteractive
+ENV TZ=Asia/Shanghai
+
+# change to THU source
+RUN apt update && apt install -y ca-certificates && apt clean
+RUN mv /etc/apt/sources.list /etc/apt/sources.list.bkp
+COPY ./sources.list /etc/apt/sources.list
+RUN apt update && apt upgrade -y
 
 # install python3 & pip, using THU source
 RUN apt update
