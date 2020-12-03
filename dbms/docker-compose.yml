@@ -1,0 +1,20 @@
+version: "3.8"
+
+services:
+  mongo:
+    image: dbms
+    container_name: ${CONTAINER_NAME:?"CONTAINER_NAME unset"}
+    hostname: ${CONTAINER_NAME:?"CONTAINER_NAME unset"}
+    restart: always
+    ports:
+      - 27017:27017
+    volumes:
+      - mongo-data:${DATA_DIR:?"DATA_DIR unset"}
+    env_file: .env
+
+volumes:
+  mongo-data:
+
+networks:
+  default:
+    name: ${NETWORK:-ddbs-clusters}

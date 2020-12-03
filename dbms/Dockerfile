@@ -20,14 +20,7 @@ COPY ./requirements.txt .
 RUN python3 -m pip install -r ./requirements.txt -U
 
 # copy files
-COPY ./hadoop/* /etc/hadoop/
-COPY ./3-sized-db-generation .
 COPY ./entry.sh .
 
-RUN apt install -y iputils-ping
-RUN python3 -m pip install pyhdfs
-RUN apt install vim -y
-COPY ./hdfs .
-
 # start
-ENTRYPOINT ["bash"]
+ENTRYPOINT ["sh", "entry.sh"]

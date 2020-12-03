@@ -15,7 +15,7 @@
 
 ## MongoDB
 
-Located in `dbms`. This image will start MongoDB service, generate data, and import the documents into MongoDB as collections of `db` named `ddbs`.
+Located in `dbms`. This image will start MongoDB cluster, generate data, and import the documents into MongoDB as collections of `db` named `ddbs`.
 Then it moves all the unstructured data (files inside `articles`) to HDFS.
 
 ### Build Image

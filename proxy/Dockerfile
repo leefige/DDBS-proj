@@ -17,6 +17,7 @@ RUN python3 -m pip install -r ./requirements.txt -U
 COPY ./hadoop/* /etc/hadoop/
 COPY ./hdfs hdfs
 COPY ./3-sized-db-generation .
+COPY ./proxy.py .
 
 # start
 ENTRYPOINT ["tail", "-f", "/dev/null"]
