@@ -2,7 +2,7 @@ version: "3.8"
 
 services:
   mongo:
-    image: dbms
+    image: leefige/mongo-sharded
     container_name: ${CONTAINER_NAME:?"CONTAINER_NAME unset"}
     hostname: ${CONTAINER_NAME:?"CONTAINER_NAME unset"}
     restart: always
