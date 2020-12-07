@@ -1,25 +1,8 @@
-import json
 import os
 import argparse
 
 from hdfs import WebHDFS
-from pymongo import MongoClient
-
-DB_NAME = 'proj'
-
-
-def mongo_init(mongo_host, init_path):
-    mongo = MongoClient(mongo_host)
-    print(mongo.list_database_names())
-
-    collections = ['user', 'article', 'read']
-    for collec in collections:
-        path = os.path.join(init_path, f'{collec}.dat')
-        with open(path, 'r') as fin:
-            dat = []
-            for line in fin:
-                dat.append(json.loads(line))
-        mongo[DB_NAME][collec].insert_many(dat)
+from dbms import DBMS
 
 
 if __name__ == "__main__":
@@ -33,4 +16,51 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    mongo_init(args.mongo_host, args.init_path)
+    # connect
+    print("Connecting to MongoDB server...")
+    mongo = DBMS(args.mongo_host)
+    if not mongo.echo():
+        print("Error: failed to connect to MongoDB server")
+        exit(-1)
+    print("MongoDB server connected!")
+
+    print("Connecting to HDFS server...")
+    fs = WebHDFS(host=args.hdfs_host)
+    if not fs.echo():
+        print("Error: failed to connect to HDFS server")
+        exit(-1)
+    print("HDFS server connected!")
+
+    # init
+    if fs.is_empty():
+        print("Initializing HDFS...")
+        fs.setup(args.init_path)
+        print("HDFS initialized!")
+
+    if mongo.is_empty():
+        print("Initializing MongoDB...")
+        mongo.mongo_init(args.init_path)
+        print("MongoDB initialized!")
+
+    # top k
+    joined = mongo.perform("read", DBMS.pipeline_top_k(
+        'timestamp', 5, reversed_order=True) + DBMS.pipeline_join("article", "aid", output="top_article", keep_attrs=["timestamp"]))
+
+    def extract_res(res, attr):
+        out = res[attr]
+        if isinstance(out, list):
+            assert len(out) == 1
+            out = out[0]
+        return out
+
+    top_articles = [extract_res(res, "top_article") for res in joined]
+    for i in top_articles:
+        print(i)
+
+    if os.path.exists("mytmp"):
+        import shutil
+        shutil.rmtree("mytmp")
+    os.makedirs("mytmp")
+
+    for i in top_articles:
+        fs.get_dir(f"articles/article{i['aid']}", "mytmp")

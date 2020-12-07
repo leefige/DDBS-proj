@@ -23,6 +23,16 @@ class WebHDFS(HDFS_API):
     def setup(self, dirpath, **kwargs):
         self.put_dir(dirpath, ".")
 
+    def is_empty(self):
+        return not self.fs.exists(f"{self.__abs_path('articles')}")
+
+    def echo(self):
+        try:
+            self.fs.get_active_namenode()
+        except Exception:
+            return False
+        return True
+
     def put_file(self, src_path: str, dst_path: str, exist_ok=False, check=True, **kwargs):
         if check:
             if not isinstance(src_path, str):

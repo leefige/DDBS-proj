@@ -27,6 +27,12 @@ class HDFS(HDFS_API):
         assert self.__subcall(f"hdfs dfs -mkdir -p articles")
         assert self.__subcall(f"hdfs dfs -copyFromLocal {dirpath}/* articles")
 
+    def echo(self):
+        return self.__subcall("hdfs dfs -test -e /")
+
+    def is_empty(self):
+        return not self.__subcall("hdfs dfs -test -e articles")
+
     def __put(self, src_paths, dst_path):
         for src_path in src_paths:
             if not os.path.exists(src_path):

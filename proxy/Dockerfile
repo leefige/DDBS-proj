@@ -15,8 +15,9 @@ RUN python3 -m pip install -r ./requirements.txt -U
 
 # copy files
 COPY ./hadoop/* /etc/hadoop/
-COPY ./hdfs hdfs
 COPY ./3-sized-db-generation .
+COPY ./hdfs hdfs
+COPY ./dbms dbms
 COPY ./proxy.py .
 
 # start

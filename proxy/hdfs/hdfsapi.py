@@ -2,6 +2,12 @@ class HDFS_API(object):
     def setup(self, dirpath, **kwargs):
         raise NotImplementedError
 
+    def echo(self):
+        raise NotImplementedError
+
+    def is_empty(self):
+        raise NotImplementedError
+
     def put_file(self, src_path: str, dst_path: str, **kwargs):
         raise NotImplementedError
 
