@@ -20,13 +20,16 @@ def get_article(fs, aid: str):
             f"Article {aid} already exists at {os.path.join(TMP_DIR, f'article{aid}')}")
 
 
-def retrieve_top_5(cache, mongo, fs, duration: str) -> list:
+def retrieve_top_5(popular_cache, article_cache, mongo, fs, duration: str) -> list:
     # TODO: change to popular
     # TODO: time duration
-    query = f"retrieve_top_5_{duration:s}"
-    if cache.exists(query):
-        print(f"retrieve query {query} from cache, TTL: {cache.ttl(query)}")
-        top_articles = json.loads(cache.get(query))
+    query = duration
+    if popular_cache.exists(query):
+        print(
+            f"retrieve query {query} from cache, TTL: {popular_cache.ttl(query)}")
+        top_article_ids = json.loads(popular_cache.get(query))
+        top_articles = [json.loads(article_cache.get(aid))
+                        for aid in top_article_ids]
     else:
         joined = mongo.perform("read", DBMS.pipeline_top_k(
             'timestamp', 5, reversed_order=True) + DBMS.pipeline_join(
@@ -43,7 +46,10 @@ def retrieve_top_5(cache, mongo, fs, duration: str) -> list:
             return out
 
         top_articles = [extract_res(res, "top_article") for res in joined]
-        cache.set(query, json.dumps(top_articles), ex=24*60*60)
+        top_article_ids = [art['aid'] for art in top_articles]
+        popular_cache.set(query, json.dumps(top_article_ids), ex=24*60*60)
+        for art in top_articles:
+            article_cache.set(art['aid'], json.dumps(art))
 
     for i in top_articles:
         get_article(fs, i['aid'])
@@ -83,6 +89,7 @@ if __name__ == "__main__":
     caches['read'] = redis.StrictRedis(host='localhost', port=6379, db=2)
     caches['be_read'] = redis.StrictRedis(host='localhost', port=6379, db=3)
     caches['popular'] = redis.StrictRedis(host='localhost', port=6379, db=4)
+    caches['query'] = redis.StrictRedis(host='localhost', port=6379, db=5)
     for cache in caches.values():
         if cache.echo("ping") != b"ping":
             print("Error: failed to connect to Redis server")
@@ -102,6 +109,7 @@ if __name__ == "__main__":
         mongo.mongo_init(args.init_path)
         print("MongoDB initialized!")
 
-    top_articles = retrieve_top_5(caches['popular'], mongo, fs, 'weekly')
+    top_articles = retrieve_top_5(
+        caches['popular'], caches['article'], mongo, fs, 'weekly')
     for i in top_articles:
         print(i)
