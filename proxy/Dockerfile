@@ -8,6 +8,10 @@ RUN apt install -y python3 python3-pip
 RUN python3 -m pip install -i https://pypi.tuna.tsinghua.edu.cn/simple pip -U
 RUN python3 -m pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
 
+# install redis
+RUN apt update
+RUN apt install -y redis-server
+
 # install python requirements
 WORKDIR /proxy
 COPY ./requirements.txt .
@@ -19,6 +23,7 @@ COPY ./3-sized-db-generation .
 COPY ./hdfs hdfs
 COPY ./dbms dbms
 COPY ./proxy.py .
+COPY ./entry.sh .
 
 # start
-ENTRYPOINT ["tail", "-f", "/dev/null"]
+ENTRYPOINT ["bash", "entry.sh"]

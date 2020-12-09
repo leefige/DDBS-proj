@@ -2,3 +2,4 @@ numpy>=1.19
 Pillow>=7.2
 PyHDFS>=0.3.1
 pymongo>=3.11
+redis>=3.5
