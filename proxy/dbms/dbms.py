@@ -22,7 +22,14 @@ class DBMS(object):
             self.db[collec].insert_many(dat)
 
     def is_empty(self):
-        return DBMS.DB_NAME not in self.mongo.list_database_names()
+        if DBMS.DB_NAME not in self.mongo.list_database_names():
+            return True
+        elif "user" not in self.db.list_collection_names():
+            return True
+        elif self.db["user"].count == 0:
+            return True
+        else:
+            return False
 
     def echo(self):
         try:
