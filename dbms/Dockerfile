@@ -27,7 +27,10 @@ WORKDIR /dbms
 COPY ./requirements.txt .
 RUN python3 -m pip install -r ./requirements.txt -U
 
+RUN apt update && apt install vim less -y
+
 # copy files
+COPY ./setup.js .
 COPY ./entry.sh .
 
 # start

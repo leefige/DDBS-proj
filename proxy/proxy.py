@@ -35,9 +35,9 @@ class Proxy(object):
             host='localhost', port=6379, db=1)
         self.caches['read'] = redis.StrictRedis(
             host='localhost', port=6379, db=2)
-        self.caches['be_read'] = redis.StrictRedis(
+        self.caches['be-read'] = redis.StrictRedis(
             host='localhost', port=6379, db=3)
-        self.caches['popular'] = redis.StrictRedis(
+        self.caches['popular-rank'] = redis.StrictRedis(
             host='localhost', port=6379, db=4)
         self.caches['query'] = redis.StrictRedis(
             host='localhost', port=6379, db=5)
@@ -71,15 +71,44 @@ class Proxy(object):
             print(
                 f"Article {aid} already exists at {os.path.join(self.TMP_DIR, f'article{aid}')}")
 
+    def query_collection(self, collection: str, condition: dict = None):
+        assert collection in ["user", "article",
+                              "read", "be-read", "popular-rank"]
+        query_cache = self.caches['query']
+        if condition is not None:
+            assert isinstance(condition, dict)
+            query = f"query_collection({collection:s}, {json.dumps(condition):s})"
+        else:
+            query = f"query_collection({collection:s})"
+
+        if query_cache.exists(query):
+            print(
+                f"retrieve query {query} from cache, TTL: {query_cache.ttl(query)}")
+            ids = json.loads(query_cache.get(query))
+            res = [json.loads(self.caches[collection].get(i))
+                   for i in ids]
+        else:
+            res = list(self.mongo.db[collection].find(condition))
+            ids = [item['id'] for item in res]
+            query_cache.set(query, json.dumps(ids))
+            for i in res:
+                i.pop('_id')
+                self.caches[collection].set(i['id'], json.dumps(i))
+
+        if collection == "article":
+            for i in ids:
+                self.get_article(i[1:])
+        return res
+
     def retrieve_top_5(self, temporalGranularity: str) -> list:
-        popular_cache = self.caches['popular']
+        popular_cache = self.caches['popular-rank']
         article_cache = self.caches['article']
         query = temporalGranularity
         if popular_cache.exists(query):
             print(
                 f"retrieve query {query} from cache, TTL: {popular_cache.ttl(query)}")
             top_article_ids = json.loads(popular_cache.get(query))
-            top_articles = [json.loads(article_cache.get(aid))
+            top_articles = [json.loads(article_cache.get(f"a{aid}"))
                             for aid in top_article_ids]
         else:
             # TODO: change to popular
@@ -101,7 +130,7 @@ class Proxy(object):
             top_article_ids = [art['aid'] for art in top_articles]
             popular_cache.set(query, json.dumps(top_article_ids), ex=24*60*60)
             for art in top_articles:
-                article_cache.set(art['aid'], json.dumps(art))
+                article_cache.set(f"a{art['aid']}", json.dumps(art))
 
         for i in top_articles:
             self.get_article(i['aid'])
@@ -123,6 +152,9 @@ if __name__ == "__main__":
     proxy = Proxy(args.mongo_host, args.hdfs_host)
     proxy.init(args.init_path)
 
-    top_articles = proxy.retrieve_top_5('weekly')
-    for i in top_articles:
-        print(i)
+    # top_articles = proxy.retrieve_top_5('weekly')
+    # for i in top_articles:
+    #     print(i)
+    print(proxy.query_collection('user'))
+    print(proxy.query_collection('article', {'aid': "5"}))
+    print(proxy.query_collection('read', {'aid': "8"}))
