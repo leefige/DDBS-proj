@@ -26,7 +26,7 @@ class DBMS(object):
             return True
         elif "user" not in self.db.list_collection_names():
             return True
-        elif self.db["user"].count == 0:
+        elif self.db["user"].count() == 0:
             return True
         else:
             return False
