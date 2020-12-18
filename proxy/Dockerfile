@@ -17,6 +17,8 @@ WORKDIR /proxy
 COPY ./requirements.txt .
 RUN python3 -m pip install -r ./requirements.txt -U
 
+RUN apt update && apt install vim less -y
+
 # copy files
 COPY ./hadoop/* /etc/hadoop/
 COPY ./3-sized-db-generation .
@@ -24,6 +26,10 @@ COPY ./hdfs hdfs
 COPY ./dbms dbms
 COPY ./proxy.py .
 COPY ./entry.sh .
+RUN chmod +x ./proxy.py
+
+COPY ./insert.py .
+
 
 # start
 ENTRYPOINT ["bash", "entry.sh"]
