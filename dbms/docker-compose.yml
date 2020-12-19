@@ -2,15 +2,14 @@ version: "3.8"
 
 services:
   mongo:
-    image: dbms
-    # image: leefige/mongo-sharded
+    image: leefige/mongo-sharded
     container_name: ${CONTAINER_NAME:?"CONTAINER_NAME unset"}
     hostname: ${CONTAINER_NAME:?"CONTAINER_NAME unset"}
     restart: always
     ports:
       - 27017:27017
-    # volumes:
-    #   - mongo-data:${DATA_DIR:?"DATA_DIR unset"}
+    volumes:
+      - mongo-data:${DATA_DIR:?"DATA_DIR unset"}
     env_file: .env
 
 volumes:
