@@ -7,7 +7,7 @@ services:
     container_name: proxy-0
     restart: always
     volumes:
-      - proxy-10g:/data
+      - data-10g:/data
 
   proxy1:
     # image: proxy
