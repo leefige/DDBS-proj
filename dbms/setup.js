@@ -24,15 +24,15 @@ sh.addTagRange("proj.read",{"region" : "Beijing", "uid" : MinKey }, { "region" :
 sh.addTagRange("proj.read",{"region" : "Hong Kong", "uid" : MinKey }, { "region" :"Hong Kong", "uid" : MaxKey }, DBMS2);
 sh.enableBalancing("proj.read");
 
-sh.disableBalancing("proj.be-read")
-sh.addTagRange("proj.be-read",{"category" : "science", "aid" : MinKey }, { "category" :"science", "aid" : MaxKey }, DBMS1);
-sh.addTagRange("proj.be-read",{"category" : "technology", "aid" : MinKey }, { "category" :"technology", "aid" : MaxKey }, DBMS2);
-sh.enableBalancing("proj.be-read");
+sh.disableBalancing("proj.beread")
+sh.addTagRange("proj.beread",{"category" : "science", "aid" : MinKey }, { "category" :"science", "aid" : MaxKey }, DBMS1);
+sh.addTagRange("proj.beread",{"category" : "technology", "aid" : MinKey }, { "category" :"technology", "aid" : MaxKey }, DBMS2);
+sh.enableBalancing("proj.beread");
 
 // shard
 sh.shardCollection("proj.user", {"region":1, "uid":1});
 sh.shardCollection("proj.article", {"category":1, "aid":1});
 sh.shardCollection("proj.read", { region: 1, uid: 1 });
-sh.shardCollection("proj.be-read", { category: 1, aid: 1 });
+sh.shardCollection("proj.beread", { category: 1, aid: 1 });
 
 print(sh.status());

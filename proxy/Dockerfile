@@ -28,8 +28,5 @@ COPY ./proxy.py .
 COPY ./entry.sh .
 RUN chmod +x ./proxy.py
 
-COPY ./insert.py .
-
-
 # start
 ENTRYPOINT ["bash", "entry.sh"]

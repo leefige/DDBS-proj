@@ -30,15 +30,15 @@ class Proxy(object):
 
         print("Connecting to local Redis server...")
         self.caches = {}
-        self.caches['article'] = redis.StrictRedis(
+        self.caches[DBMS.DB_ARTICLE] = redis.StrictRedis(
             host='localhost', port=6379, db=0)
-        self.caches['user'] = redis.StrictRedis(
+        self.caches[DBMS.DB_USER] = redis.StrictRedis(
             host='localhost', port=6379, db=1)
-        self.caches['read'] = redis.StrictRedis(
+        self.caches[DBMS.DB_READ] = redis.StrictRedis(
             host='localhost', port=6379, db=2)
-        self.caches['be-read'] = redis.StrictRedis(
+        self.caches[DBMS.DB_BE_READ] = redis.StrictRedis(
             host='localhost', port=6379, db=3)
-        self.caches['popular-rank'] = redis.StrictRedis(
+        self.caches[DBMS.DB_RANK] = redis.StrictRedis(
             host='localhost', port=6379, db=4)
         self.caches['query'] = redis.StrictRedis(
             host='localhost', port=6379, db=5)
@@ -63,6 +63,13 @@ class Proxy(object):
             self.mongo.mongo_init(path)
             print("MongoDB initialized!")
 
+    def clear_cache(self):
+        for cache in self.caches.values():
+            cache.flushdb()
+        if os.path.exists(self.TMP_DIR):
+            shutil.rmtree(self.TMP_DIR)
+        os.makedirs(self.TMP_DIR, exist_ok=True)
+
     def get_article(self, aid: str):
         if not os.path.exists(os.path.join(self.TMP_DIR, f"article{aid}")):
             self.fs.get_dir(f"articles/article{aid}", self.TMP_DIR)
@@ -72,20 +79,13 @@ class Proxy(object):
             print(
                 f"Article {aid} already exists at {os.path.join(self.TMP_DIR, f'article{aid}')}")
 
-    def clear_cache(self):
-        for cache in self.caches.values():
-            cache.flushdb()
-        if os.path.exists(self.TMP_DIR):
-            shutil.rmtree(self.TMP_DIR)
-        os.makedirs(self.TMP_DIR, exist_ok=True)
-
     def remove_article(self, aid: str):
         if os.path.exists(os.path.join(self.TMP_DIR, f"article{aid}")):
             shutil.rmtree(os.path.join(self.TMP_DIR, f"article{aid}"))
 
     def query_collection(self, collection: str, condition: dict = None):
-        assert collection in ["user", "article",
-                              "read", "be-read", "popular-rank"]
+        assert collection in [DBMS.DB_USER, DBMS.DB_ARTICLE,
+                              DBMS.DB_READ, DBMS.DB_BE_READ, DBMS.DB_RANK]
         query_cache = self.caches['query']
         if condition is not None:
             assert isinstance(condition, dict)
@@ -100,15 +100,14 @@ class Proxy(object):
             res = [json.loads(self.caches[collection].get(i))
                    for i in ids]
         else:
-            res = list(self.mongo.db[collection].find(condition))
+            res = list(self.mongo.db[collection].find(condition, {'_id': 0}))
             ids = [item['id'] for item in res]
-            query_cache.set(query, json.dumps(ids), ex=24*60*60)
+            query_cache.set(query, json.dumps(ids), ex=60)
             for i in res:
-                i.pop('_id')
                 self.caches[collection].set(
                     i['id'], json.dumps(i), ex=24*60*60)
 
-        if collection == "article":
+        if collection == DBMS.DB_ARTICLE:
             for i in ids:
                 self.get_article(i[1:])
         return res
@@ -122,59 +121,85 @@ class Proxy(object):
                 f"retrieve query {query} from cache, TTL: {query_cache.ttl(query)}")
             users = json.loads(query_cache.get(query))
         else:
-            users = list(self.mongo.db['user'].find(user_condition))
+            users = list(self.mongo.perform(DBMS.DB_USER, [
+                {'$match': user_condition},
+                {'$project': {'_id': 0}}
+            ]))
             for user in users:
-                user.pop('_id')
-                read_list = list(
-                    self.mongo.db['read'].find({'uid': user['uid']}))
-                for l in read_list:
-                    l.pop('_id')
-                user['read_list'] = read_list
-            query_cache.set(query, json.dumps(users), ex=24*60*60)
+                # save user to cache
+                self.caches[DBMS.DB_USER].set(
+                    user['id'], json.dumps(user), ex=24*60*60)
+                # query read list
+                read_list = list(self.mongo.perform(DBMS.DB_READ, [
+                    {'$match': {'uid': user['uid']}},
+                    {'$project': {'_id': 0, 'aid': 1}}
+                ]))
+                user['read_list'] = [self.mongo.db[DBMS.DB_ARTICLE].find_one(
+                    {'aid': ar['aid']}, {'_id': 0}) for ar in read_list]
+                # save article to cache
+                for ar in user['read_list']:
+                    self.caches[DBMS.DB_ARTICLE].set(
+                        ar['id'], json.dumps(ar), ex=24*60*60)
+            query_cache.set(query, json.dumps(users), ex=60)
+
+        # get article
+        for user in users:
+            for ar in user['read_list']:
+                self.get_article(ar['aid'])
         return users
 
     def insert_one(self, collection: str, content: dict):
-        assert collection in ["user", "article", "read"]
+        assert collection in [DBMS.DB_USER, DBMS.DB_ARTICLE, DBMS.DB_READ]
         assert 'id' in content.keys()
 
         _id = self.mongo.db[collection].insert_one(content).inserted_id
-        self.caches[collection].delete(content['id'])
 
-        if collection == "article":
+        # flush
+        self.caches['query'].flushdb()
+        if self.caches[collection].exists(content['id']):
+            self.caches[collection].delete(content['id'])
+
+        if collection == DBMS.DB_ARTICLE:
             self.remove_article(content['id'][1:])
         return _id
 
     def update_one(self, collection: str, filter_: dict, update: dict):
-        assert collection in ["user", "article", "read"]
+        assert collection in [DBMS.DB_USER, DBMS.DB_ARTICLE, DBMS.DB_READ]
 
-        find_res = list(self.mongo.db[collection].find(filter_))
-        find_ids = [i['_id'] for i in find_res]
+        find_res = self.mongo.db[collection].find_one(filter_)
 
         ret = self.mongo.db[collection].update_one(
-            {'_id': find_ids[0]}, update)
-        _id = ret.upserted_id
-        m_id = self.mongo.db[collection].find({"_id": _id})['id']
-        self.caches[collection].delete(m_id)
+            {'_id': find_res['_id']}, update)
 
-        if collection == "article":
-            self.remove_article(m_id[1:])
+        # flush
+        self.caches['query'].flushdb()
+        if self.caches[collection].exists(find_res['id']):
+            self.caches[collection].delete(find_res['id'])
+
+        if collection == DBMS.DB_ARTICLE:
+            self.remove_article(find_res['id'][1:])
         return ret.matched_count, ret.modified_count
 
     def replace_one(self, collection: str, filter_: dict, replacement: dict):
-        assert collection in ["user", "article", "read"]
+        assert collection in [DBMS.DB_USER, DBMS.DB_ARTICLE, DBMS.DB_READ]
 
-        ret = self.mongo.db[collection].replace_one(filter_, replacement)
-        _id = ret.upserted_id
-        m_id = self.mongo.db[collection].find({"_id": _id})['id']
-        self.caches[collection].delete(m_id)
+        find_res = self.mongo.db[collection].find_one(filter_)
 
-        if collection == "article":
-            self.remove_article(m_id[1:])
+        ret = self.mongo.db[collection].replace_one(
+            {'_id': find_res['_id']}, replacement)
+
+        # flush
+        self.caches['query'].flushdb()
+        if self.caches[collection].exists(find_res['id']):
+            self.caches[collection].delete(find_res['id'])
+
+        if collection == DBMS.DB_ARTICLE:
+            self.remove_article(find_res['id'][1:])
         return ret.matched_count, ret.modified_count
 
     def retrieve_top_5(self, temporalGranularity: str) -> list:
-        popular_cache = self.caches['popular-rank']
-        article_cache = self.caches['article']
+        popular_cache = self.caches[DBMS.DB_RANK]
+        article_cache = self.caches[DBMS.DB_ARTICLE]
         query = temporalGranularity
         if popular_cache.exists(query):
             print(
@@ -184,26 +209,16 @@ class Proxy(object):
                             for aid in top_article_ids]
         else:
             # TODO: change to popular
-            joined = self.mongo.perform("read", DBMS.pipeline_top_k(
-                'timestamp', 5, reversed_order=True) + DBMS.pipeline_join(
-                "article", "aid", output="top_article", keep_attrs=["timestamp"]))
+            top_article_ids = self.mongo.db[DBMS.DB_RANK].find_one(
+                {'temporalGranularity': temporalGranularity}, {'articleAidList': 1})['articleAidList']
+            if len(top_article_ids) > 5:
+                top_article_ids = top_article_ids[:5]
+            popular_cache.set(query, json.dumps(top_article_ids), ex=60*60)
 
-            def extract_res(res, attr):
-                out = res[attr]
-                if isinstance(out, list):
-                    assert len(out) == 1
-                    out = out[0]
-                assert isinstance(out, dict)
-                # drop mongo _id
-                out.pop("_id")
-                return out
-
-            top_articles = [extract_res(res, "top_article") for res in joined]
-            top_article_ids = [art['aid'] for art in top_articles]
-            popular_cache.set(query, json.dumps(top_article_ids), ex=24*60*60)
+            top_articles = [self.mongo.db[DBMS.DB_ARTICLE].find_one(
+                {'aid': aid}, {'_id': 0}) for aid in top_article_ids]
             for art in top_articles:
-                article_cache.set(f"a{art['aid']}",
-                                  json.dumps(art), ex=24*60*60)
+                article_cache.set(art['id'], json.dumps(art), ex=24*60*60)
 
         for i in top_articles:
             self.get_article(i['aid'])
@@ -225,12 +240,22 @@ if __name__ == "__main__":
     proxy = Proxy(args.mongo_host, args.hdfs_host)
     proxy.init(args.init_path)
 
-    # top_articles = proxy.retrieve_top_5('weekly')
-    # for i in top_articles:
-    #     print(i)
-    print(proxy.query_collection('user'))
-    print(proxy.query_collection('article', {'aid': "5"}))
-    print(proxy.query_collection('read', {'aid': "8"}))
-    print(proxy.update_one('user', {'uid': "8"}, {
-          '$inc': {'obtainedCredits': 10}}))
-    print(proxy.query_user_read({'region': "Hong Kong"}))
+    top_articles = proxy.retrieve_top_5('weekly')
+    for i in top_articles:
+        print(i)
+    print()
+
+    print(proxy.query_collection(DBMS.DB_ARTICLE, {'aid': "5"}))
+    print()
+    print(proxy.query_collection(DBMS.DB_BE_READ, {'aid': "5"}))
+    print()
+    print(proxy.query_collection(DBMS.DB_USER, {'uid': "8"}))
+    print()
+    print(proxy.update_one(DBMS.DB_USER, {'uid': "8"}, {
+          '$set': {'language': 'zh'}}))
+    print()
+    print(proxy.query_collection(DBMS.DB_USER, {'uid': "8"}))
+    print()
+    hk_read = proxy.query_user_read({'region': "Hong Kong"})
+    for r in hk_read:
+        print(r)
