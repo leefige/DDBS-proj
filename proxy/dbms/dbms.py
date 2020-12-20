@@ -2,6 +2,7 @@ import copy
 import datetime
 import json
 import os
+import time
 from collections import defaultdict
 
 import pymongo
@@ -205,13 +206,22 @@ class DBMS(object):
 
     def insert_into_rank(self):
         whole = self.db[self.DB_READ].find()
-        latest_day = datetime.datetime.utcfromtimestamp(
-            1506400000).strftime("%Y-%m-%d")
-        latest_week = datetime.datetime.utcfromtimestamp(
-            1506400000).strftime("%Y-%W")
-        latest_month = datetime.datetime.utcfromtimestamp(
-            1506400000).strftime("%Y-%m")
-        print(latest_day)
+        latest_day = datetime.datetime.utcfromtimestamp(0).strftime("%Y-%m-%d")
+        latest_week = datetime.datetime.utcfromtimestamp(0).strftime("%Y-%W")
+        latest_month = datetime.datetime.utcfromtimestamp(0).strftime("%Y-%m")
+        for line in whole:
+            t = line["timestamp"][:-3]
+            t = int(t)
+            day = datetime.datetime.utcfromtimestamp(t).strftime("%Y-%m-%d")
+            if day > latest_day:
+                latest_day = day
+            week = datetime.datetime.utcfromtimestamp(t).strftime("%Y-%W")
+            if week > latest_week:
+                latest_week = week
+            month = datetime.datetime.utcfromtimestamp(t).strftime("%Y-%m")
+            if month > latest_month:
+                latest_month = month
+        print("latest_day", latest_day)
 
         day_rank = defaultdict(int)
         week_rank = defaultdict(int)

@@ -256,6 +256,7 @@ if __name__ == "__main__":
     print()
     print(proxy.query_collection(DBMS.DB_USER, {'uid': "8"}))
     print()
-    hk_read = proxy.query_user_read({'region': "Hong Kong"})
+    hk_read = proxy.query_user_read(
+        {'region': "Hong Kong", 'gender': "female", 'dept': "dept4", 'grade': "grade2"})
     for r in hk_read:
         print(r)
