@@ -5,9 +5,9 @@ from PIL import Image
 from shutil import copyfile
 import os
 
-USERS_NUM = 10
-ARTICLES_NUM = 10
-READS_NUM = 100
+USERS_NUM = 100
+ARTICLES_NUM = 50
+READS_NUM = 1000
 
 uid_region = {}
 aid_lang = {}
