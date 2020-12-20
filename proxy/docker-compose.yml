@@ -2,20 +2,18 @@ version: "3.8"
 
 services:
   proxy0:
-    # image: proxy
-    image: leefige/ddbs-proxy
+    image: proxy
     container_name: proxy-0
     restart: always
     volumes:
-      - data-10g:/data
+      - proxy-test:/data
 
   proxy1:
-    # image: proxy
-    image: leefige/ddbs-proxy
+    image: proxy
     container_name: proxy-1
     restart: always
     volumes:
-      - data-100g:/data
+      - proxy-test:/data
 
   # proxy10g:
   #   image: proxy
