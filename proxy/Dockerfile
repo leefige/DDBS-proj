@@ -19,12 +19,15 @@ RUN python3 -m pip install -r ./requirements.txt -U
 
 # copy files
 COPY ./hadoop/* /etc/hadoop/
-COPY ./3-sized-db-generation .
+COPY ./3-sized-db-generation/* ./3-sized-db-generation/
 COPY ./hdfs hdfs
 COPY ./dbms dbms
-COPY ./proxy.py .
+COPY ./proxy proxy
+COPY ./app app
+COPY ./mysite mysite
 COPY ./entry.sh .
-RUN chmod +x ./proxy.py
+
+EXPOSE 8000
 
 # start
 ENTRYPOINT ["bash", "entry.sh"]

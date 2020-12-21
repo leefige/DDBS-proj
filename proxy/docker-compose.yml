@@ -2,18 +2,22 @@ version: "3.8"
 
 services:
   proxy0:
-    image: proxy
+    image: proxy-web
     container_name: proxy-0
     restart: always
+    ports:
+      - 8000:8000
     volumes:
       - proxy-test:/data
 
   proxy1:
-    image: proxy
+    image: proxy-web
     container_name: proxy-1
     restart: always
+    ports:
+      - 8001:8000
     volumes:
-      - proxy-test:/data
+      - data-50g:/data
 
   # proxy10g:
   #   image: proxy
