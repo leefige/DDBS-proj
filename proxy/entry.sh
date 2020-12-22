@@ -20,10 +20,11 @@ cp -r /proxy/proxy .
 
 cd app
 rm views.py
-cp /proxy/app/* .
+cp /proxy/app/*.py .
+cp -r /proxy/app/templates .
 
 cd ../mysite
-rm urls.py
+rm urls.py settings.py
 cp /proxy/mysite/* .
 
 cd ..
