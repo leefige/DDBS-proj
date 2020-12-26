@@ -17,7 +17,7 @@ services:
     ports:
       - 8001:8000
     volumes:
-      - data-50g:/data
+      - data-10g:/data
 
   # proxy10g:
   #   image: proxy

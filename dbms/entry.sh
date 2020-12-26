@@ -16,4 +16,4 @@ mongo ./setup.js
 echo "Finished!"
 
 # keep running
-tail -f /dev/null
+python3 ./watch.py watch

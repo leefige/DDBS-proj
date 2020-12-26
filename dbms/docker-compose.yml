@@ -9,12 +9,11 @@ services:
     ports:
       - 27017:27017
     volumes:
-      - mongo-data-50g:${DATA_DIR:?"DATA_DIR unset"}
+      - mongo-data:${DATA_DIR:?"DATA_DIR unset"}
     env_file: .env
 
 volumes:
   mongo-data:
-  mongo-data-50g:
 
 networks:
   default:

@@ -96,11 +96,40 @@ class DBMS(object):
         # add region field
         for line in data:
             v = line["uid"]
-            res = self.db[self.DB_USER].find_one({"uid": v})
+            res = self.user_backup[int(v)]
             region = res["region"]
             line["region"] = region
 
-        self.db[self.DB_READ].insert_many(data)
+        del self.user_backup
+
+        # insert by batch
+        batch = 10000
+        n_batch = len(data) // batch
+        for i in range(n_batch):
+            print(f"Inserting read, batch {i}")
+            if i != n_batch - 1:
+                try:
+                    self.db[self.DB_READ].insert_many(
+                        data[:batch], ordered=False)
+                except pymongo.errors.BulkWriteError:
+                    time.sleep(3)
+                    num_inserted = self.db[self.DB_READ].count()
+                    start_idx = num_inserted - i * batch
+                    if start_idx < batch:
+                        self.db[self.DB_READ].insert_many(
+                            data[start_idx:batch])
+                data = data[batch:]
+            else:
+                try:
+                    self.db[self.DB_READ].insert_many(
+                        data, ordered=False)
+                except pymongo.errors.BulkWriteError:
+                    time.sleep(3)
+                    num_inserted = self.db[self.DB_READ].count()
+                    start_idx = num_inserted - i * batch
+                    if start_idx < batch:
+                        self.db[self.DB_READ].insert_many(
+                            data[start_idx:])
 
     def insert_into_user(self, source):
 
@@ -111,7 +140,8 @@ class DBMS(object):
         for i in range(len(data)):
             data[i] = json.loads(data[i])
 
-        self.db[self.DB_USER].insert_many(data)
+        self.user_backup = data
+        self.db[self.DB_USER].insert_many(data, ordered=False)
 
     def insert_into_article(self, source):
         f = open(source, "r")
@@ -124,8 +154,8 @@ class DBMS(object):
             if data[i]["category"] == "science":
                 backup.append(data[i])
 
-        self.db[self.DB_ARTICLE].insert_many(data)
-        self.db['articleBackup'].insert_many(backup)
+        self.db[self.DB_ARTICLE].insert_many(data, ordered=False)
+        self.db['articleBackup'].insert_many(backup, ordered=False)
 
     def insert_into_be_read(self):
         head = {

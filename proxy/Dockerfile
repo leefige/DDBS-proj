@@ -26,6 +26,7 @@ COPY ./proxy proxy
 COPY ./app app
 COPY ./mysite mysite
 COPY ./entry.sh .
+COPY ./setup.py .
 
 EXPOSE 8000
 

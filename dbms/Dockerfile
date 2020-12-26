@@ -30,6 +30,7 @@ RUN python3 -m pip install -r ./requirements.txt -U
 # copy files
 COPY ./setup.js .
 COPY ./entry.sh .
+COPY ./watch.py .
 
 # start
 ENTRYPOINT ["sh", "entry.sh"]
