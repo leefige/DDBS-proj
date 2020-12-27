@@ -8,7 +8,7 @@ services:
     ports:
       - 8000:8000
     volumes:
-      - proxy-test:/data
+      - data-100g:/data
 
   proxy1:
     image: proxy-web
@@ -17,7 +17,7 @@ services:
     ports:
       - 8001:8000
     volumes:
-      - data-10g:/data
+      - data-10g-new:/data
 
   # proxy10g:
   #   image: proxy
@@ -43,6 +43,7 @@ services:
 volumes:
   proxy-test:
   data-10g:
+  data-10g-new:
   data-50g:
   data-100g:
 

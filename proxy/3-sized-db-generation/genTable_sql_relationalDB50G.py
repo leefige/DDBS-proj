@@ -75,7 +75,7 @@ def gen_an_article (i):
     article["text"] = "text_a"+str(i)+'.txt'
     path = './articles/article'+str(i)
     if not os.path.exists(path):
-        os.makedirs(path)
+        os.makedirs(path) 
     num = int(random()*1000)
     text = ['Tsinghua']*num
     f = open(path+"/text_a"+str(i)+'.txt','w+',encoding="utf8")
@@ -88,8 +88,8 @@ def gen_an_article (i):
     for j in range(image_num):
         image_str+= 'image_a'+str(i)+'_'+str(j)+'.jpg,'
     article["image"] = image_str
-    num_image = int(random()*5)+1
-    for j in range(num_image):
+    # num_image = int(random()*5)+1
+    for j in range(image_num):
         a = np.random.randint(0,255,(360,480,3))
         img = Image.fromarray(a.astype('uint8')).convert('RGB')
         img.save(path+'/image_a'+str(i)+'_'+str(j)+'.jpg')
@@ -134,7 +134,7 @@ def gen_an_read (i):
     read["id"] = 'r'+str(i)
     read["uid"] = str(int(random() * USERS_NUM))
     read["aid"] = str(int(random() * ARTICLES_NUM))
-
+    
     region = uid_region[read["uid"]]
     lang = aid_lang[read["aid"]]
     ps = p[region + lang]
@@ -149,7 +149,7 @@ def gen_an_read (i):
         read["agreeOrNot"] = "1" if random() < ps[1] else "0"
         read["commentOrNot"] = "1" if random() < ps[2] else "0"
         read["shareOrNot"] = "1" if random() < ps[3] else "0"
-        read["commentDetail"] = "comments to this article: (" + read["uid"] + "," + read["aid"] + ")"
+        read["commentDetail"] = "comments to this article: (" + read["uid"] + "," + read["aid"] + ")" 
     return "(" +  \
             "\"" + read["timestamp"] + "\", " + \
             "\"" + read["id"] + "\", " + \

@@ -143,9 +143,9 @@ class Proxy(object):
             query_cache.set(query, json.dumps(users), ex=60)
 
         # get article
-        for user in users:
-            for ar in user['read_list']:
-                self.get_article(ar['aid'])
+        # for user in users:
+        #     for ar in user['read_list']:
+        #         self.get_article(ar['aid'])
         return users
 
     def insert_one(self, collection: str, content: dict):
