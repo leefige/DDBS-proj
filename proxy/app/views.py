@@ -54,16 +54,21 @@ def top(request, temporal: str):
 
 def detail(request, id: str, file_type: str, file_name: str):
     proxy.query_collection('article', {'id': id})
-    context = {
-        'file': f"article{id[1:]}/{file_name}"
-    }
+
     if file_type == 'text':
         with open(f"/var/tmp/proxy/article{id[1:]}/text_{id}.txt") as fin:
             res = fin.read()
-        return HttpResponse(res)
-    elif file_type == 'image':
-        return render(request, 'app/image.html', context)
-    elif file_type == 'video':
-        return render(request, 'app/video.html', context)
+        context = {
+            'text': res
+        }
+        return render(request, 'app/text.html', context)
     else:
-        raise Http404("Unknown file type")
+        context = {
+            'file': f"article{id[1:]}/{file_name}"
+        }
+        if file_type == 'image':
+            return render(request, 'app/image.html', context)
+        elif file_type == 'video':
+            return render(request, 'app/video.html', context)
+        else:
+            raise Http404("Unknown file type")
