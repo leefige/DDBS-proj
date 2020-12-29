@@ -208,7 +208,6 @@ class Proxy(object):
             top_articles = [json.loads(article_cache.get(f"a{aid}"))
                             for aid in top_article_ids]
         else:
-            # TODO: change to popular
             top_article_ids = self.mongo.db[DBMS.DB_RANK].find_one(
                 {'temporalGranularity': temporalGranularity}, {'articleAidList': 1})['articleAidList']
             if len(top_article_ids) > 5:
